@@ -146,6 +146,9 @@ public abstract class AbstractBaseParseTest {
                                 return input.getValueWithType();
                             }
                         }));
+                        if (null != each.getValueIndices()) {
+                            condition.getValueIndices().addAll(each.getValueIndices());
+                        }
                         result.add(condition);
                     }
                     return result;
@@ -194,7 +197,7 @@ public abstract class AbstractBaseParseTest {
                 }));
         }
         if (null != assertObj.getLimit()) {
-            mergeContext.setLimit(new Limit(assertObj.getLimit().getOffset(), assertObj.getLimit().getRowCount()));
+            mergeContext.setLimit(new Limit(assertObj.getLimit().getOffset(), assertObj.getLimit().getRowCount(), assertObj.getLimit().getOffsetParameterIndex(), assertObj.getLimit().getRowCountParameterIndex()));
         }
         result[5] = mergeContext;
         return result;

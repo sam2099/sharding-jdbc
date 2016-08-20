@@ -54,13 +54,13 @@ public final class SQLParsedResultTest {
                 + "sqlStatementType=null, "
                 + "sqlBuilder=SELECT * FROM [Token(order)]), "
                 + "conditionContexts=[ConditionContext(conditions={Condition.Column(columnName=id, tableName=order)=Condition(column=Condition.Column(columnName=id, tableName=order), "
-                + "operator=IN, values=[1, 2, 3])})], "
+                + "operator=IN, values=[1, 2, 3], valueIndices=[])})], "
                 + "mergeContext=MergeContext("
                 + "orderByColumns=[OrderByColumn(super=AbstractSortableColumn(owner=Optional.absent(), "
                 + "name=Optional.of(id), alias=Optional.of(a), orderByType=DESC), index=Optional.absent(), columnIndex=0)], "
                 + "groupByColumns=[GroupByColumn(super=AbstractSortableColumn(owner=Optional.absent(), name=Optional.of(id), alias=Optional.of(d), orderByType=ASC), columnIndex=0)], "
                 + "aggregationColumns=[AggregationColumn(expression=COUNT(id), aggregationType=COUNT, alias=Optional.of(c), option=Optional.absent(), derivedColumns=[], columnIndex=-1)], "
-                + "limit=Limit(offset=0, rowCount=10), executorEngine=null, columnLabelIndexMap=null, currentOrderByKeys=[]))"));
+                + "limit=Limit(offset=0, rowCount=10, offsetParameterIndex=Optional.absent(), rowCountParameterIndex=Optional.absent())))"));
     }
     
     private void generateRouteContext(final RouteContext routeContext) throws IOException {
@@ -88,6 +88,6 @@ public final class SQLParsedResultTest {
         mergeContext.getAggregationColumns().add(new AggregationColumn("COUNT(id)", AggregationType.COUNT, Optional.of("c"), Optional.<String>absent()));
         mergeContext.getOrderByColumns().add(new OrderByColumn(Optional.<String>absent(), "id", Optional.of("a"), OrderByType.DESC));
         mergeContext.getGroupByColumns().add(new GroupByColumn(Optional.<String>absent(), "id", Optional.of("d"), OrderByType.ASC));
-        mergeContext.setLimit(new Limit(0, 10));
+        mergeContext.setLimit(new Limit(0, 10, Optional.<Integer>absent(), Optional.<Integer>absent()));
     }
 }

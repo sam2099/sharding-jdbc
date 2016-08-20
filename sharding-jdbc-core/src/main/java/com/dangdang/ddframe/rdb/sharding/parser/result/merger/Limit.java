@@ -17,6 +17,7 @@
 
 package com.dangdang.ddframe.rdb.sharding.parser.result.merger;
 
+import com.google.common.base.Optional;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
@@ -31,7 +32,15 @@ import lombok.ToString;
 @ToString
 public class Limit {
     
+    public static final String OFFSET_NAME = "limit_offset";
+    
+    public static final String COUNT_NAME = "limit_count";
+    
     private final int offset;
     
     private final int rowCount;
+    
+    private final Optional<Integer> offsetParameterIndex;
+    
+    private final Optional<Integer> rowCountParameterIndex;
 }

@@ -22,7 +22,6 @@ import com.dangdang.ddframe.rdb.sharding.executor.wrapper.StatementExecutorWrapp
 import com.dangdang.ddframe.rdb.sharding.jdbc.adapter.AbstractStatementAdapter;
 import com.dangdang.ddframe.rdb.sharding.merger.ResultSetFactory;
 import com.dangdang.ddframe.rdb.sharding.parser.result.merger.MergeContext;
-import com.dangdang.ddframe.rdb.sharding.parser.result.router.SQLStatementType;
 import com.dangdang.ddframe.rdb.sharding.router.SQLExecutionUnit;
 import com.dangdang.ddframe.rdb.sharding.router.SQLRouteResult;
 import com.google.common.base.Charsets;
@@ -38,7 +37,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,13 +61,13 @@ public class ShardingStatement extends AbstractStatementAdapter {
     @Getter
     private final int resultSetHoldability;
     
+    @Getter(AccessLevel.PROTECTED)
     private final Map<HashCode, Statement> cachedRoutedStatements = new HashMap<>();
     
     @Getter(AccessLevel.PROTECTED)
     @Setter(AccessLevel.PROTECTED)
     private MergeContext mergeContext;
     
-    @Getter(AccessLevel.PROTECTED)
     @Setter(AccessLevel.PROTECTED)
     private ResultSet currentResultSet;
     
@@ -145,29 +143,33 @@ public class ShardingStatement extends AbstractStatementAdapter {
     
     private StatementExecutor generateExecutor(final String sql) throws SQLException {
         StatementExecutor result = new StatementExecutor(shardingConnection.getShardingContext().getExecutorEngine());
-        SQLRouteResult sqlRouteResult = shardingConnection.getShardingContext().getSqlRouteEngine().route(sql, Collections.emptyList());
+        SQLRouteResult sqlRouteResult = shardingConnection.getShardingContext().getSqlRouteEngine().route(sql);
         mergeContext = sqlRouteResult.getMergeContext();
-        mergeContext.setExecutorEngine(shardingConnection.getShardingContext().getExecutorEngine());
         for (SQLExecutionUnit each : sqlRouteResult.getExecutionUnits()) {
-            result.addStatement(new StatementExecutorWrapper(generateStatement(each.getSql(), each.getDataSource(), sqlRouteResult.getSqlStatementType()), each));
+            Statement statement = getStatement(shardingConnection.getConnection(each.getDataSource(), sqlRouteResult.getSqlStatementType()), each.getSql());
+            replayMethodsInvocation(statement);
+            result.addStatement(new StatementExecutorWrapper(statement, each));
         }
         return result;
     }
     
-    private Statement generateStatement(final String sql, final String dataSourceName, final SQLStatementType sqlStatementType) throws SQLException {
-        HashCode hashCode =  Hashing.md5().newHasher().putString(sql, Charsets.UTF_8).putString(dataSourceName, Charsets.UTF_8).hash();
+    protected Statement getStatement(final Connection connection, final String sql) throws SQLException {
+        HashCode hashCode =  Hashing.md5().newHasher().putInt(connection.hashCode()).putString(sql, Charsets.UTF_8).hash();
         if (cachedRoutedStatements.containsKey(hashCode)) {
             return cachedRoutedStatements.get(hashCode);
         }
-        Connection connection = shardingConnection.getConnection(dataSourceName, sqlStatementType);
+        Statement statement = generateStatement(connection, sql);
+        cachedRoutedStatements.put(hashCode, statement);
+        return statement;
+    }
+    
+    protected Statement generateStatement(final Connection connection, final String sql) throws SQLException {
         Statement result;
         if (0 == resultSetHoldability) {
             result = connection.createStatement(resultSetType, resultSetConcurrency);
         } else {
             result = connection.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
         }
-        replayMethodsInvocation(result);
-        cachedRoutedStatements.put(hashCode, result);
         return result;
     }
     
@@ -177,6 +179,10 @@ public class ShardingStatement extends AbstractStatementAdapter {
             return currentResultSet;
         }
         List<ResultSet> resultSets = new ArrayList<>(getRoutedStatements().size());
+        if (getRoutedStatements().size() == 1) {
+            currentResultSet = getRoutedStatements().iterator().next().getResultSet();
+            return currentResultSet;
+        }
         for (Statement each : getRoutedStatements()) {
             resultSets.add(each.getResultSet());
         }

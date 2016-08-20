@@ -6,7 +6,20 @@ weight = 1
 
 # Release Notes
 
-## 1.3.1-SNAPSHOT
+## 1.3.2-SNAPSHOT
+
+### 功能提升
+
+1. [ISSUE #79](https://github.com/dangdangdotcom/sharding-jdbc/issues/79) 关于MySQL 分页limit
+
+### 缺陷修正
+
+1. [ISSUE #36](https://github.com/dangdangdotcom/sharding-jdbc/issues/36) ShardingPreparedStatement无法反复设置参数
+1. [ISSUE #114](https://github.com/dangdangdotcom/sharding-jdbc/issues/114) ShardingPreparedStatement执行批处理任务时,反复解析sql导致oom
+1. [ISSUE #33](https://github.com/dangdangdotcom/sharding-jdbc/issues/33) Limit支持问题
+1. [ISSUE #124](https://github.com/dangdangdotcom/sharding-jdbc/issues/124) com.dangdang.ddframe.rdb.sharding.jdbc.adapter.AbstractStatementAdapter.getUpdateCount返回值不符合JDBC规范
+
+## 1.3.1
 
 ### 功能提升
 
